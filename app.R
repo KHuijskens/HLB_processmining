@@ -1,38 +1,22 @@
-# Function to download packages that are missing
-#using<-function(...) {
-#  libs<-unlist(list(...))
-#  req<-unlist(lapply(libs,require,character.only=TRUE))
-#  need<-libs[req==FALSE]
-#  if(length(need)>0){ 
-#    install.packages(need)
-#    lapply(need,require,character.only=TRUE)
-#  }
-#}
+# Function to load required packages and download packages that are missing
+require_packages <- function(x){
+  for( i in x ){
+    #  require returns TRUE invisibly if it was able to load package
+    if( ! require( i , character.only = TRUE ) ){
+      #  If package was not able to be loaded then re-install
+      install.packages( i , dependencies = TRUE )
+      #  Load package after installing
+      require( i , character.only = TRUE )
+    }
+  }
+}
 
-#using("dplyr", "shiny", "shinythemes", "shinyWidgets", "shinyjs", "shinydashboard",
-#      "ggplot2","DiagrammeR", "bupaR", "edeaR", "processmapR", "processanimateR", "DT",
-#      "plotly", "rsconnect", "RCurl", "daqapo", "bslib")
+#  Then try/install packages...
+require_packages(c("dplyr", "shiny", "shinythemes", "shinyWidgets", "shinyjs", "shinydashboard",
+      "ggplot2","DiagrammeR", "bupaR", "edeaR", "processmapR", "processanimateR", "DT",
+      "plotly", "rsconnect", "RCurl", "daqapo", "imager", "bslib"))
 
 
-library(dplyr)
-library(shiny)
-library(shinythemes)
-library(shinyWidgets)
-library(shinyjs)
-library(shinydashboard)
-library(ggplot2)
-library(DiagrammeR)
-library(bupaR)
-library(edeaR)
-library(processmapR)
-library(processanimateR)
-library(DT)
-library(plotly)
-library(rsconnect)
-library(RCurl)
-#library(daqapo)
-library(bslib)
-library(imager)
 
 x <- url( "https://raw.githubusercontent.com/KHuijskens/HLB_processmining/e24595472493b5bca51bdaf99b3088a82f4fd591/final_set.csv")
 dummy_data <- read.csv(x)
@@ -49,7 +33,6 @@ eventlog <- eventlog(
   timestamp = "Eind",
   resource_id = "Resource")
 
-# load.image("https://raw.githubusercontent.com/KHuijskens/HLB_processmining/f625a9998f8ae737302cf55e6d788d7a680a21d9/www./HLBIcon.png")
 
 # Define UI 
 ui <- fluidPage(
@@ -80,14 +63,14 @@ ui <- fluidPage(
                 pickerInput("Taakpicker","Selecteer taak (voor plot en tabel)", choices = unique(dummy_data$Taak), selected = dummy_data$Taak, options = list(`actions-box` = TRUE),multiple = T),
                 pickerInput("Factuurpicker","Selecteer factuur (voor resource map en tabel)", choices = unique(dummy_data$Factuurnr.), selected = dummy_data$Factuurnr., options = list(`actions-box` = TRUE),multiple = T),
                 pickerInput("Resourcepicker","Selecteer resource (voor tabel)", choices = unique(dummy_data$Resource), selected = dummy_data$Resource, options = list(`actions-box` = TRUE),multiple = T),
-                selectInput("processmap", "Selecteer type processmap", choices = c("Frequentie", "Tijd in uren")), # c(frequency(), performance(FUN = median, units = "hours")
+                selectInput("processmap", "Selecteer type processmap", choices = c("Frequentie", "Tijd in uren")), # these choices represent: c(frequency(), performance(FUN = median, units = "hours")
                 dateRangeInput("Daterange", "Selecteer datarange (voor tabel)", start = min(dummy_data$Datum), end = max(dummy_data$Datum), min = min(dummy_data$Datum), max = max(dummy_data$Datum))),
                           
               actionButton("update", "Update"),
               actionButton("reset", "Reset filters")),
                         
           # Main panel with a plot for doorlooptijd and a table for actions performed
-          mainPanel(
+          mainPanel( # infoboxes to show basic facts
               infoBox(title = "Aantal facturen: ", value = eventlog %>% n_cases, icon = icon("file-invoice-dollar"), color = "aqua", fill = TRUE),
               infoBox(title = "Aantal stromen: ", value = eventlog %>% n_traces, icon = icon("arrow-alt-circle-right"), color = "light-blue", fill = TRUE),
               infoBox(title = "Gemiddelde doorlooptijd: ", value = round(throughput_time(eventlog, level = "log", units = "days")[4], 1), " dagen", icon = icon("business-time"), color = "navy", fill = TRUE), 
@@ -199,7 +182,7 @@ server <- function(input, output, session) {
         theme_classic()
     })
     
-    # 2. Updating the filter on process map - DOESNT WORK
+    # 2. Updating the filter on process map 
     output$processmap <- renderGrViz({
       
       plot <- process_map(eventlog = eventlog, type = type_update, render = F)
