@@ -1,0 +1,14 @@
+name: HLB_processmining
+title: HLB_processmining
+username:
+account: kimberleyhuijskens
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 6353983
+bundleId: 5934290
+url: https://kimberleyhuijskens.shinyapps.io/HLB_processmining/
+when: 1653292778.18228
+lastSyncTime: 1653292778.18228
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: final_set.csv|www/HLBIcon.png
